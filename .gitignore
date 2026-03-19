@@ -1,0 +1,30 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/.env
+
+# Backend
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/.Python
+backend/env/
+backend/venv/
+backend/.venv/
+backend/database.db
+backend/*.log
+backend/.env
+
+# General
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+bash.exe.stackdump
