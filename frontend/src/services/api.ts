@@ -1,4 +1,16 @@
+// Use environment variable for production, fallback to local for development
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+export interface EmotionResponse {
+  emotion: string;
+  emoji: string;
+  confidence: number;
+}
+
+export interface DetectionResponse {
+  faces: EmotionResponse[];
+  error?: string;
+}
 
 export const api = {
   async predictEmotion(imageBase64: string): Promise<DetectionResponse> {

@@ -7,15 +7,11 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
 import io
-# print("--- Importing Keras ---", flush=True)
-# import keras
-print("--- Importing DB Utils ---", flush=True)
 from utils.db import init_db, add_history_entry, get_history_entries, delete_history_entry
-print("--- DB Utils Imported ---", flush=True)
 
-print("--- Starting Application ---", flush=True)
 app = Flask(__name__)
-CORS(app)
+# In production, you can replace "*" with your specific Vercel URL for better security
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Global model variable
 model = None
@@ -23,7 +19,10 @@ model = None
 def load_emotion_model():
     global model
     import keras
-    MODEL_PATH = os.path.join('models', 'emotion_model.h5')
+    # Use absolute path for model to avoid issues on different platforms
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    MODEL_PATH = os.path.join(BASE_DIR, 'models', 'emotion_model.h5')
+    
     print(f"--- Loading Model from {MODEL_PATH} ---", flush=True)
     try:
         model = keras.models.load_model(MODEL_PATH)
@@ -33,55 +32,7 @@ def load_emotion_model():
         model = None
 
 # Initialize database
-print("--- Initializing Database ---", flush=True)
 init_db()
-print("--- Database Initialized ---", flush=True)
-
-# Start model loading in background or just call it here
-# load_emotion_model()
-
-
-# Emotion mapping (FER2013 standard)
-EMOTIONS = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
-EMOJI_MAP = {
-    'Angry': '😠',
-    'Disgust': '🤢',
-    'Fear': '😨',
-    'Happy': '😊',
-    'Sad': '😢',
-    'Surprise': '😲',
-    'Neutral': '😐'
-}
-
-def preprocess_image(cv2_img):
-    """Preprocess image for MobileNet model: resize to 224x224 and normalize"""
-    try:
-        # Resize to 224x224 (standard for MobileNet)
-        resized = cv2.resize(cv2_img, (224, 224))
-        # Convert to float32 and normalize to [0, 1]
-        img_array = resized.astype('float32') / 255.0
-        # Add batch dimension
-        img_array = np.expand_dims(img_array, axis=0)
-        return img_array
-    except Exception as e:
-        print(f"Preprocessing error: {e}")
-        return None
-
-def decode_base64_image(base64_str):
-    """Decodes a base64 string into a numpy array (OpenCV format)"""
-    try:
-        if ',' in base64_str:
-            base64_str = base64_str.split(',')[1]
-        
-        image_bytes = base64.b64decode(base64_str)
-        image = Image.open(io.BytesIO(image_bytes))
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
-        
-        return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    except Exception as e:
-        print(f"Error decoding image: {e}")
-        return None
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
@@ -112,7 +63,7 @@ def predict():
     emotion = EMOTIONS[max_index]
     emoji = EMOJI_MAP.get(emotion, '❓')
 
-    # Store detection in history (Step 8)
+    # Store detection in history
     add_history_entry(emotion, emoji, round(confidence, 2))
 
     response = {
@@ -127,6 +78,45 @@ def predict():
     
     return jsonify(response)
 
+# Emotion mapping (FER2013 standard)
+EMOTIONS = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+EMOJI_MAP = {
+    'Angry': '😠',
+    'Disgust': '🤢',
+    'Fear': '😨',
+    'Happy': '😊',
+    'Sad': '😢',
+    'Surprise': '😲',
+    'Neutral': '😐'
+}
+
+def preprocess_image(cv2_img):
+    """Preprocess image for MobileNet model: resize to 224x224 and normalize"""
+    try:
+        resized = cv2.resize(cv2_img, (224, 224))
+        img_array = resized.astype('float32') / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
+        return img_array
+    except Exception as e:
+        print(f"Preprocessing error: {e}")
+        return None
+
+def decode_base64_image(base64_str):
+    """Decodes a base64 string into a numpy array (OpenCV format)"""
+    try:
+        if ',' in base64_str:
+            base64_str = base64_str.split(',')[1]
+        
+        image_bytes = base64.b64decode(base64_str)
+        image = Image.open(io.BytesIO(image_bytes))
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    except Exception as e:
+        print(f"Error decoding image: {e}")
+        return None
+
 @app.route('/api/history', methods=['GET'])
 def get_history():
     history = get_history_entries()
@@ -140,7 +130,9 @@ def delete_history(entry_id):
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'healthy'})
+    return jsonify({'status': 'healthy', 'model_loaded': model is not None})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Get port from environment variable for deployment
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
