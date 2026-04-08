@@ -31,6 +31,18 @@ def load_emotion_model():
 # Initialize database
 init_db()
 
+@app.route('/')
+def home():
+    return jsonify({
+        'status': 'online',
+        'message': 'Emotion Detection AI Backend is running',
+        'endpoints': {
+            'predict': '/api/predict (POST)',
+            'history': '/api/history (GET)',
+            'health': '/health (GET)'
+        }
+    })
+
 @app.route('/api/predict', methods=['POST'])
 def predict():
     global model
