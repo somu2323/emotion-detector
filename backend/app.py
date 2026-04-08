@@ -10,8 +10,8 @@ import io
 from utils.db import init_db, add_history_entry, get_history_entries, delete_history_entry
 
 app = Flask(__name__)
-# In production, you can replace "*" with your specific Vercel URL for better security
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# Enable CORS for all routes and all origins to avoid any blocking in production
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Global model variable
 model = None
@@ -47,25 +47,33 @@ def home():
 def predict():
     global model
     if model is None:
+        print("Model is not loaded. Loading now...")
         load_emotion_model()
     
     if model is None:
-        return jsonify({'error': 'Model not loaded on server'}), 500
+        print("CRITICAL: Failed to load model after attempt.")
+        return jsonify({'error': 'Model not loaded on server. Check backend logs.'}), 500
 
     data = request.get_json()
     if not data or 'image' not in data:
+        print("Error: No image provided in request body.")
         return jsonify({'error': 'No image provided'}), 400
 
+    print("Decoding base64 image...")
     image = decode_base64_image(data['image'])
     if image is None:
+        print("Error: Invalid image or no face detected.")
         return jsonify({'error': 'Invalid Image - No human face detected'}), 400
 
     # Preprocess the cropped face image
+    print("Preprocessing image...")
     processed_img = preprocess_image(image)
     if processed_img is None:
+        print("Error: Preprocessing failed.")
         return jsonify({'error': 'Error processing image'}), 500
 
     # Make prediction
+    print("Predicting emotion...")
     predictions = model.predict(processed_img)
     max_index = int(np.argmax(predictions[0]))
     confidence = float(predictions[0][max_index]) * 100

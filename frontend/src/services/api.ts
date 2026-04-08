@@ -1,5 +1,13 @@
-// Use environment variable for production, fallback to local for development
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Base URL handling for production and local development
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return 'http://localhost:5000/api';
+  
+  // Ensure the URL ends with /api even if the user forgot it in the env variable
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
+};
+
+const API_URL = getBaseUrl();
 
 export interface EmotionResponse {
   emotion: string;
