@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 import { Upload, ImageIcon, AlertCircle, X, BrainCircuit, Loader2 } from 'lucide-react';
 import * as faceapi from 'face-api.js';
 import { loadModels } from '../services/faceDetection';
@@ -175,9 +175,9 @@ const UploadPage = () => {
             <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/40 aspect-square sm:aspect-video flex items-center justify-center shadow-2xl">
               <img 
                 ref={imageRef}
-                src={selectedImage} 
+                src={selectedImage || undefined} 
                 alt="Preview" 
-                className="max-h-full w-full object-contain" 
+                className="max-h-full w-full object-contain"
               />
               <button 
                 onClick={clearImage}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { History as HistoryIcon, Download, Trash2, Calendar, Loader2 } from 'lucide-react';
+import { History as HistoryIcon, Download, Trash2, Calendar, Loader2, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 
 interface HistoryEntry {

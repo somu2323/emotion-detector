@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Camera, RefreshCw, StopCircle, BrainCircuit, Loader2, AlertCircle } from 'lucide-react';
+import { Camera, RefreshCw, StopCircle, Loader2, AlertCircle } from 'lucide-react';
 import * as faceapi from 'face-api.js';
 import { useWebcam } from '../hooks/useWebcam';
 import { loadModels } from '../services/faceDetection';
@@ -16,7 +16,7 @@ interface WebcamDetection extends EmotionResponse {
 }
 
 const WebcamPage = () => {
-  const { videoRef, isActive, error: webcamError, startWebcam, stopWebcam, captureFrame } = useWebcam();
+  const { videoRef, isActive, error: webcamError, startWebcam, stopWebcam } = useWebcam();
   const [results, setResults] = useState<WebcamDetection[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
