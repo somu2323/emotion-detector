@@ -18,17 +18,14 @@ model = None
 
 def load_emotion_model():
     global model
-    import keras
+    import tensorflow as tf
     # Use absolute path for model to avoid issues on different platforms
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     MODEL_PATH = os.path.join(BASE_DIR, 'models', 'emotion_model.h5')
     
-    print(f"--- Loading Model from {MODEL_PATH} ---", flush=True)
     try:
-        model = keras.models.load_model(MODEL_PATH)
-        print("--- Model Loaded Successfully ---", flush=True)
+        model = tf.keras.models.load_model(MODEL_PATH)
     except Exception as e:
-        print(f"---!!! Model Loading Failed: {e} !!!---", flush=True)
         model = None
 
 # Initialize database
